@@ -1,5 +1,4 @@
-"""Phase 3 — RAG: embed the law corpus once, retrieve by meaning per clause.
-
+"""
 Corpus scope (chosen by reading the source Acts' own chapter structure,
 not guessed line ranges):
   - Labour Act, 2017: entire act (183 numbered sections) — short enough,
