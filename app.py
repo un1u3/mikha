@@ -1,11 +1,3 @@
-"""Phase 9 — wires Phases 1-7 together, serves the frontend.
-
-Upload -> read image (Gemma multimodal, Phase 1) -> process clauses
-(Phases 2-4) -> top-5 summary (Phase 5). Voice (Phase 6) and Q&A
-(Phase 7) are served on demand for the currently loaded document,
-kept in memory (single-user demo, no auth/session complexity needed).
-"""
-
 import os
 import io
 import json
