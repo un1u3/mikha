@@ -1,7 +1,3 @@
-"""Phase 5 — Top 5 summary: aggregate the risk-flagged clauses from Phase 4
-output into a ranked top-5 list. Pure logic on already-generated JSON,
-no new API call."""
-
 import json
 import sys
 
