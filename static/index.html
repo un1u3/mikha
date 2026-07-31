@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mikha — understand what you're signing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,420;0,9..144,560;0,9..144,640;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:      #f1e9d8;
+    --paper-2:    #e8ddc3;
+    --paper-edge: #d8ccac;
+    --ink:        #202a2c;
+    --ink-soft:   #556260;
+    --ink-faint:  #8a8d7e;
+    --stamp:      #a4301c;
+    --stamp-soft: #c65a3f;
+    --seal:       #7e6222;
+    --seal-soft:  #a5822f;
+    --line:       #c9bd9e;
+    --ok:         #3c6a4f;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", sans-serif;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(32,42,44,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  ::selection{ background:var(--stamp-soft); color:#fff; }
+  a{ color:inherit; }
+
+  .devanagari{ font-family:"Noto Serif Devanagari","Noto Serif",serif; }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+
+  /* ---------- shell ---------- */
+  .wrap{ max-width:960px; margin:0 auto; padding:0 28px; }
+
+  header.site{
+    border-bottom:1px solid var(--line);
+    padding:22px 0;
+    background:linear-gradient(180deg, rgba(241,233,216,0.4), transparent);
+  }
+  header.site .wrap{ display:flex; align-items:baseline; justify-content:space-between; }
+  .wordmark{
+    font-family:"Fraunces", serif;
+    font-weight:640;
+    font-size:26px;
+    letter-spacing:0.01em;
+  }
+  .wordmark .dot{ color:var(--stamp); }
+  .site-tag{ font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--ink-soft); }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:64px 0 40px; border-bottom:1px solid var(--line); }
+  .hero h1{
+    font-family:"Fraunces", serif;
+    font-weight:560;
+    font-style:normal;
+    font-size:clamp(34px, 5vw, 52px);
+    line-height:1.12;
+    margin:0 0 20px;
+    max-width:15ch;
+  }
+  .hero h1 em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--stamp);
+  }
+  .hero p.lede{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    max-width:52ch;
+    margin:0 0 34px;
+  }
+
+  /* ---------- intake form ---------- */
+  .intake{
+    background:var(--paper-2);
+    border:1px solid var(--paper-edge);
+    border-radius:3px;
+    padding:24px 26px;
+    position:relative;
+  }
+  .intake::before{
+    content:"DOCUMENT INTAKE";
+    position:absolute; top:-10px; left:22px;
+    background:var(--paper);
+    padding:0 8px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px;
+    letter-spacing:0.16em;
+    color:var(--ink-faint);
+  }
+  .intake-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  @media (max-width:640px){ .intake-grid{ grid-template-columns:1fr; } }
+
+  .field label{
+    display:block;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .file-drop{
+    border:1.5px dashed var(--line);
+    border-radius:2px;
+    padding:16px;
+    background:var(--paper);
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .file-drop input{ width:100%; font-family:"IBM Plex Sans"; font-size:13px; }
+  textarea{
+    width:100%; height:88px; resize:vertical;
+    border:1px solid var(--line);
+    border-radius:2px;
+    background:var(--paper);
+    padding:10px 12px;
+    font-family:"Noto Serif Devanagari", serif;
+    font-size:14px;
+    color:var(--ink);
+  }
+  textarea:focus, input:focus, button:focus, .clause-head:focus-visible{
+    outline:2px solid var(--seal-soft); outline-offset:2px;
+  }
+
+  .intake-actions{ display:flex; align-items:center; gap:16px; margin-top:20px; }
+
+  button.primary{
+    font-family:"IBM Plex Sans", sans-serif;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.01em;
+    color:#fbf6ea;
+    background:var(--ink);
+    border:none;
+    border-radius:2px;
+    padding:12px 22px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  button.primary:hover{ background:#33413f; }
+  button.primary:disabled{ background:var(--ink-faint); cursor:default; }
+
+  #status{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  #status.err{ color:var(--stamp); }
+  .pulse-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--stamp);
+    display:inline-block;
+    animation:pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%, 100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:0.35; transform:scale(0.7); }
+  }
+
+  #progress-wrap{
+    margin-top:16px;
+    height:3px;
+    background:var(--paper-edge);
+    border-radius:2px;
+    overflow:hidden;
+    display:none;
+  }
+  #progress-bar{
+    height:100%;
+    width:0%;
+    background:var(--stamp);
+    transition:width .35s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ---------- summary ---------- */
+  #summary{ display:none; padding:40px 0 8px; }
+  #summary h2{
+    font-family:"Fraunces", serif;
+    font-weight:560;
+    font-size:22px;
+    margin:0 0 4px;
+  }
+  #summary .eyebrow{ margin-bottom:6px; display:block; }
+  .summary-list{ list-style:none; margin:18px 0 0; padding:0; display:grid; gap:2px; }
+  .summary-list li{
+    display:grid;
+    grid-template-columns:34px 1fr;
+    gap:14px;
+    padding:13px 4px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .summary-list li:hover .summary-text{ color:var(--stamp); }
+  .summary-list .num{
+    font-family:"IBM Plex Mono", monospace;
+    color:var(--ink-faint);
+    font-size:13px;
+    padding-top:2px;
+  }
+  .summary-text{
+    font-family:"Noto Serif Devanagari", serif;
+    font-size:15px;
+    line-height:1.55;
+    transition:color .12s ease;
+  }
+  .summary-text .tag{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+    margin-right:8px;
+  }
+
+  /* ---------- clause list header / filter ---------- */
+  .clauses-toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:36px;
+  }
+  .clauses-toolbar .eyebrow-row{ display:flex; align-items:center; gap:10px; }
+  .filter-toggle{ display:flex; gap:2px; background:var(--paper-2); border:1px solid var(--paper-edge); border-radius:20px; padding:3px; }
+  .filter-toggle button{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    padding:5px 13px;
+    border-radius:16px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .filter-toggle button.on{ background:var(--ink); color:var(--paper); }
+
+  /* ---------- clauses ---------- */
+  #clauses{ padding:14px 0 36px; }
+  .clause{
+    background:var(--paper-2);
+    border:1px solid var(--paper-edge);
+    border-radius:2px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+    transition:box-shadow .15s ease, border-color .15s ease;
+    animation:rise .4s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .clause.hidden-by-filter{ display:none; }
+
+  .skeleton{
+    background:var(--paper-2);
+    border:1px solid var(--paper-edge);
+    border-radius:2px;
+    margin-bottom:22px;
+    padding:18px 22px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .skeleton .sk-id{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    flex-shrink:0;
+  }
+  .skeleton .sk-bars{ flex:1; display:flex; flex-direction:column; gap:8px; }
+  .sk-bar{
+    height:10px;
+    border-radius:3px;
+    background:linear-gradient(90deg, var(--paper-edge) 25%, #fff8e8 50%, var(--paper-edge) 75%);
+    background-size:200% 100%;
+    animation:shimmer 1.4s ease-in-out infinite;
+  }
+  .sk-bar.w60{ width:60%; }
+  .sk-bar.w85{ width:85%; }
+  @keyframes shimmer{
+    0%{ background-position:200% 0; }
+    100%{ background-position:-200% 0; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .clause{ animation:none; }
+    .sk-bar{ animation:none; }
+  }
+  .clause.active{
+    border-color:var(--ink-soft);
+    box-shadow:0 2px 14px rgba(32,42,44,0.12);
+  }
+  .clause-head{
+    display:flex; align-items:center; gap:14px;
+    padding:12px 18px;
+    border-bottom:1px solid var(--paper-edge);
+    cursor:pointer;
+    background:rgba(255,255,255,0.25);
+  }
+  .clause-head .clause-id{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .clause-head .clause-id b{ color:var(--ink); font-weight:600; }
+
+  .stamp-badge{
+    margin-left:auto;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    padding:3px 10px 4px;
+    border:1.5px solid var(--ok);
+    color:var(--ok);
+    border-radius:3px;
+  }
+  .stamp-badge.risk{
+    border-color:var(--stamp);
+    color:var(--stamp);
+    transform:rotate(-3deg);
+    font-weight:500;
+    position:relative;
+  }
+  .stamp-badge.risk::after{
+    content:"";
+    position:absolute; inset:-3px;
+    border:1px solid var(--stamp);
+    border-radius:5px;
+    opacity:0.35;
+  }
+
+  .clause-body{ display:grid; grid-template-columns:1fr 1fr; }
+  @media (max-width:720px){ .clause-body{ grid-template-columns:1fr; } }
+
+  .clause-body .original{
+    padding:20px 22px;
+    background:var(--paper);
+    border-right:1px solid var(--paper-edge);
+    font-family:"Noto Serif Devanagari", serif;
+    font-size:15px;
+    line-height:1.75;
+    white-space:pre-wrap;
+    color:var(--ink);
+  }
+  @media (max-width:720px){ .clause-body .original{ border-right:none; border-bottom:1px solid var(--paper-edge); } }
+
+  .clause-body .panel{ padding:20px 22px; }
+  .panel .devanagari{ font-size:15px; line-height:1.7; margin:0; }
+
+  .panel .block{ margin-top:16px; }
+  .panel .block:first-of-type{ margin-top:0; }
+
+  .jargon-row{
+    display:flex; gap:8px; margin-top:6px; font-size:13.5px; line-height:1.5;
+  }
+  .jargon-row .term{
+    font-family:"Noto Serif Devanagari", serif;
+    font-weight:600;
+    color:var(--seal);
+    white-space:nowrap;
+  }
+  .jargon-row .def{ font-family:"Noto Serif Devanagari", serif; color:var(--ink-soft); }
+
+  .risk-note{
+    border-left:2px solid var(--stamp);
+    padding:8px 0 8px 12px;
+    font-family:"Noto Serif Devanagari", serif;
+    font-size:13.5px;
+    line-height:1.6;
+    color:#7a2c1b;
+  }
+
+  .citation{
+    display:flex; align-items:baseline; gap:8px;
+    padding-top:12px; margin-top:14px;
+    border-top:1px dashed var(--line);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    color:var(--seal);
+  }
+  .citation .act{ color:var(--ink-soft); }
+
+  .confidence{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px;
+    color:var(--ink-faint);
+    margin-top:6px;
+    letter-spacing:0.02em;
+  }
+
+  .listen-btn{
+    margin-top:16px;
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:"IBM Plex Sans", sans-serif;
+    font-size:12.5px; font-weight:500;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--ink-soft);
+    border-radius:20px;
+    padding:7px 14px 7px 12px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .listen-btn:hover{ background:var(--ink); color:var(--paper); }
+  .listen-btn:disabled{ opacity:0.5; cursor:default; }
+  .listen-btn .ico{ font-size:13px; }
+  .audio-player{
+    display:none;
+    width:100%;
+    margin:18px 0 0;
+  }
+  .audio-player.ready{ display:block; }
+
+  /* ---------- ask ---------- */
+  #qa-box{
+    display:none;
+    padding:34px 0 70px;
+    border-top:1px solid var(--line);
+    margin-top:8px;
+  }
+  #qa-box h2{
+    font-family:"Fraunces", serif;
+    font-weight:560;
+    font-size:22px;
+    margin:0 0 16px;
+  }
+  .qa-row{ display:flex; gap:10px; }
+  #qa-input{
+    flex:1;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    border-radius:2px;
+    padding:11px 14px;
+    font-family:"Noto Serif Devanagari", serif;
+    font-size:14px;
+    color:var(--ink);
+  }
+  button.secondary{
+    font-family:"IBM Plex Sans", sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--paper);
+    background:var(--stamp);
+    border:none;
+    border-radius:2px;
+    padding:0 22px;
+    cursor:pointer;
+  }
+  button.secondary:hover{ background:var(--stamp-soft); }
+
+  #qa-answer{
+    display:none;
+    margin-top:18px;
+    padding:16px 18px;
+    background:var(--paper-2);
+    border-left:3px solid var(--seal);
+    font-family:"Noto Serif Devanagari", serif;
+    font-size:15px;
+    line-height:1.65;
+  }
+  #qa-answer .src{
+    display:block; margin-top:10px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:22px 0 40px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; scroll-behavior:auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="wordmark">mikha<span class="dot">.</span></div>
+    <div class="site-tag">plain-language legal review</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>You can read every word. That doesn't mean you understand <em>what you're signing.</em></h1>
+    <p class="lede">
+      Upload a photo of a rental agreement, employment contract, or any formal
+      Nepali document. Mikha explains each clause in plain terms, cites the
+      actual law behind it, and flags what's left dangerously vague — without
+      ever hiding the original text.
+    </p>
+
+    <div class="intake">
+      <div class="intake-grid">
+        <div class="field">
+          <label for="image-input">Upload a photo</label>
+          <div class="file-drop">
+            <input type="file" id="image-input" accept="image/*">
+          </div>
+        </div>
+        <div class="field">
+          <label for="text-input">Or paste the text</label>
+          <textarea id="text-input" placeholder="Paste the document's text here..."></textarea>
+        </div>
+      </div>
+      <div class="intake-actions">
+        <button class="primary" id="upload-btn">Analyze document</button>
+        <span id="status"></span>
+      </div>
+      <div id="progress-wrap"><div id="progress-bar"></div></div>
+    </div>
+  </section>
+
+  <section id="summary">
+    <span class="eyebrow">Risk summary</span>
+    <h2>Top 5 things you should know</h2>
+    <ol class="summary-list" id="summary-list"></ol>
+  </section>
+
+  <div class="clauses-toolbar" id="clauses-toolbar" style="display:none">
+    <span class="eyebrow-row"><span class="eyebrow">Clause-by-clause</span></span>
+    <div class="filter-toggle">
+      <button id="filter-all" class="on">All</button>
+      <button id="filter-flagged">Flagged only</button>
+    </div>
+  </div>
+  <section id="clauses"></section>
+
+  <section id="qa-box">
+    <span class="eyebrow">Free-form question</span>
+    <h2>Ask about this document</h2>
+    <div class="qa-row">
+      <input id="qa-input" type="text" placeholder="e.g. How much is the rent?">
+      <button class="secondary" id="qa-btn">Ask</button>
+    </div>
+    <div id="qa-answer"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">mikha — the original text is always shown untouched next to its explanation.</div>
+</footer>
+
+<audio id="player" class="audio-player" controls preload="none"></audio>
+
+<script>
+const statusEl = document.getElementById('status');
+const clausesEl = document.getElementById('clauses');
+const toolbarEl = document.getElementById('clauses-toolbar');
+const summaryEl = document.getElementById('summary');
+const summaryList = document.getElementById('summary-list');
+const qaBox = document.getElementById('qa-box');
+const qaAnswer = document.getElementById('qa-answer');
+const player = document.getElementById('player');
+const uploadBtn = document.getElementById('upload-btn');
+const progressWrap = document.getElementById('progress-wrap');
+const progressBar = document.getElementById('progress-bar');
+let activeAudioUrl = null;
+
+function setStatus(text, opts = {}) {
+  statusEl.className = opts.err ? 'err' : '';
+  statusEl.innerHTML = (opts.live ? '<span class="pulse-dot"></span>' : '') + text;
+}
+
+uploadBtn.onclick = async () => {
+  const imageFile = document.getElementById('image-input').files[0];
+  const text = document.getElementById('text-input').value.trim();
+  if (!imageFile && !text) {
+    setStatus('Add a photo or paste some text first.', { err: true });
+    return;
+  }
+
+  const fd = new FormData();
+  if (imageFile) fd.append('image', imageFile);
+  else fd.append('text', text);
+
+  uploadBtn.disabled = true;
+  setStatus('Reading the document…', { live: true });
+  clausesEl.innerHTML = '';
+  toolbarEl.style.display = 'none';
+  summaryEl.style.display = 'none';
+  qaBox.style.display = 'none';
+  progressWrap.style.display = 'block';
+  progressBar.style.width = '0%';
+
+  let total = 0, done = 0;
+
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    if (!res.ok || !res.body) {
+      const data = await res.json().catch(() => ({ error: 'request failed' }));
+      setStatus('Error: ' + data.error, { err: true });
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { value, done: streamDone } = await reader.read();
+      if (streamDone) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let sep;
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        const raw = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+        const eventMatch = raw.match(/^event: (.+)$/m);
+        const dataMatch = raw.match(/^data: (.+)$/m);
+        if (!eventMatch || !dataMatch) continue;
+        const event = eventMatch[1];
+        const data = JSON.parse(dataMatch[1]);
+
+        if (event === 'clause_count') {
+          total = data.count;
+          renderSkeletons(total);
+          toolbarEl.style.display = 'flex';
+          setStatus(`0 / ${total} clauses reviewed…`, { live: true });
+        } else if (event === 'clause') {
+          done++;
+          fillClause(data.index, data.result);
+          progressBar.style.width = Math.round((done / total) * 100) + '%';
+          setStatus(`${done} / ${total} clauses reviewed…`, { live: true });
+        } else if (event === 'clause_error') {
+          done++;
+          markClauseError(data.index, data.error);
+          progressBar.style.width = Math.round((done / total) * 100) + '%';
+        } else if (event === 'summary') {
+          renderSummary(data.summary);
+        } else if (event === 'done') {
+          setStatus(`${data.count} clauses reviewed in ${data.elapsed_seconds}s.`);
+          qaBox.style.display = 'block';
+          progressWrap.style.display = 'none';
+        } else if (event === 'error') {
+          setStatus('Error: ' + data.error, { err: true });
+          progressWrap.style.display = 'none';
+        }
+      }
+    }
+  } catch (e) {
+    setStatus('Something went wrong reaching the server.', { err: true });
+    progressWrap.style.display = 'none';
+  } finally {
+    uploadBtn.disabled = false;
+  }
+};
+
+document.getElementById('filter-all').onclick = () => setFilter(false);
+document.getElementById('filter-flagged').onclick = () => setFilter(true);
+
+function setFilter(flaggedOnly) {
+  document.getElementById('filter-all').classList.toggle('on', !flaggedOnly);
+  document.getElementById('filter-flagged').classList.toggle('on', flaggedOnly);
+  document.querySelectorAll('.clause').forEach(el => {
+    el.classList.toggle('hidden-by-filter', flaggedOnly && el.dataset.risk !== 'true');
+  });
+}
+
+function renderSkeletons(count) {
+  clausesEl.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const sk = document.createElement('div');
+    sk.className = 'skeleton';
+    sk.id = 'slot-' + i;
+    sk.innerHTML = `
+      <span class="sk-id">${String(i + 1).padStart(2, '0')}</span>
+      <div class="sk-bars"><div class="sk-bar w60"></div><div class="sk-bar w85"></div></div>
+    `;
+    clausesEl.appendChild(sk);
+  }
+}
+
+function renderSummary(items) {
+  summaryList.innerHTML = '';
+  items.forEach((it, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="summary-text"><span class="tag">clause ${it.clause_id}</span>${it.risk_reason}</span>`;
+    li.onclick = () => focusClause(it.clause_id);
+    summaryList.appendChild(li);
+  });
+  summaryEl.style.display = items.length ? 'block' : 'none';
+}
+
+function fillClause(index, c) {
+  const slot = document.getElementById('slot-' + index);
+  const card = document.createElement('div');
+  card.className = 'clause';
+  card.id = 'clause-' + c.clause_id;
+  card.dataset.risk = c.risk_flag ? 'true' : 'false';
+
+  const jargonHtml = c.jargon.map(j =>
+    `<div class="jargon-row"><span class="term">${j.term}</span><span class="def">— ${j.definition}</span></div>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="clause-head" tabindex="0">
+      <span class="clause-id">Clause <b>${c.clause_id}</b></span>
+      <span class="stamp-badge ${c.risk_flag ? 'risk' : ''}">${c.risk_flag ? 'Flagged' : 'Clear'}</span>
+    </div>
+    <div class="clause-body">
+      <div class="original">${c.original_text}</div>
+      <div class="panel">
+        <div class="block">
+          <span class="eyebrow">In plain terms</span>
+          <p class="devanagari">${c.explanation}</p>
+        </div>
+        ${jargonHtml ? `<div class="block"><span class="eyebrow">Terms explained</span>${jargonHtml}</div>` : ''}
+        ${c.risk_flag ? `<div class="block"><span class="eyebrow">Why this is risky</span><div class="risk-note">${c.risk_reason}</div></div>` : ''}
+        <div class="citation">
+          <span class="act">${c.law_citation.act}</span>
+          <span>§ ${c.law_citation.section}</span>
+        </div>
+        <div class="confidence">confidence — explanation: ${c.confidence.explanation} · citation: ${c.confidence.citation}</div>
+        <button class="listen-btn" data-id="${c.clause_id}"><span class="ico">&#9835;</span>Listen</button>
+      </div>
+    </div>
+  `;
+  card.querySelector('.clause-head').onclick = () => focusClause(c.clause_id);
+  card.querySelector('.listen-btn').onclick = (e) => { e.stopPropagation(); playVoice(c.clause_id, e.currentTarget); };
+  if (slot) slot.replaceWith(card);
+  else clausesEl.appendChild(card);
+}
+
+function markClauseError(index, message) {
+  const slot = document.getElementById('slot-' + index);
+  if (!slot) return;
+  slot.innerHTML = `<span class="sk-id">!</span><span style="font-size:13px;color:var(--stamp)">Couldn't process this clause (${message}).</span>`;
+}
+
+function focusClause(id) {
+  document.querySelectorAll('.clause').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('clause-' + id);
+  if (el) {
+    el.classList.add('active');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+async function playVoice(id, btn) {
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="ico">&#9835;</span>Loading…';
+  try {
+    const res = await fetch('/api/voice/' + encodeURIComponent(id));
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'voice request failed');
+    }
+    const blob = await res.blob();
+    if (blob.size < 1000) throw new Error('audio response was empty');
+
+    player.pause();
+    if (activeAudioUrl) URL.revokeObjectURL(activeAudioUrl);
+    activeAudioUrl = URL.createObjectURL(blob);
+    player.src = activeAudioUrl;
+    player.classList.add('ready');
+    player.load();
+
+    // TTS can take longer than a browser's transient click permission.  Keep
+    // native controls visible so the ready audio can always be started by the
+    // user if the automatic attempt is rejected.
+    try {
+      await player.play();
+      btn.innerHTML = '<span class="ico">&#9835;</span>Playing';
+    } catch (playError) {
+      btn.innerHTML = '<span class="ico">&#9835;</span>Ready — press play';
+    }
+    player.onended = () => { btn.innerHTML = original; };
+  } catch (e) {
+    btn.innerHTML = '<span class="ico">&#9835;</span>Unavailable';
+    setStatus('Audio unavailable: ' + e.message, { err: true });
+    setTimeout(() => { btn.innerHTML = original; }, 1800);
+    return;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('qa-btn').onclick = async () => {
+  const q = document.getElementById('qa-input').value.trim();
+  if (!q) return;
+  qaAnswer.style.display = 'block';
+  qaAnswer.innerHTML = 'Looking through the document…';
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q }),
+    });
+    const data = await res.json();
+    if (!res.ok) { qaAnswer.textContent = 'Error: ' + data.error; return; }
+    qaAnswer.innerHTML = `${data.answer}<span class="src">source — clause ${data.source_clauses.join(', ')}</span>`;
+    data.source_clauses.forEach(focusClause);
+  } catch (e) {
+    qaAnswer.textContent = 'Something went wrong reaching the server.';
+  }
+};
+</script>
+</body>
+</html>
