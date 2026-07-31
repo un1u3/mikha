@@ -313,9 +313,12 @@
   .clause-head{
     display:flex; align-items:center; gap:14px;
     padding:12px 18px;
-    border-bottom:1px solid var(--paper-edge);
+    border:none; border-bottom:1px solid var(--paper-edge);
+    border-radius:0;
     cursor:pointer;
     background:rgba(255,255,255,0.25);
+    width:100%; text-align:left;
+    font:inherit; color:inherit;
   }
   .clause-head .clause-id{
     font-family:"IBM Plex Mono", monospace;
@@ -432,59 +435,108 @@
   }
   .audio-player.ready{ display:block; }
 
-  /* ---------- ask ---------- */
-  #qa-box{
+  /* ---------- ask (sidebar) ---------- */
+  #qa-box {
     display:none;
-    padding:34px 0 70px;
-    border-top:1px solid var(--line);
-    margin-top:8px;
+    position:sticky;
+    top:16px;
+    height:calc(100vh - 32px);
+    background:var(--paper-2);
+    border:1px solid var(--paper-edge);
+    border-radius:3px;
+    flex-direction:column;
+    overflow:hidden;
   }
-  #qa-box h2{
-    font-family:"Fraunces", serif;
-    font-weight:560;
-    font-size:22px;
-    margin:0 0 16px;
+  #qa-box.open { display:flex; }
+  .chat-header{
+    padding:14px 16px;
+    border-bottom:1px solid var(--paper-edge);
+    background:rgba(255,255,255,0.3);
   }
-  .qa-row{ display:flex; gap:10px; }
+  #qa-ctx{
+    display:none;
+    padding:8px 12px;
+    background:var(--paper);
+    border-bottom:1px solid var(--paper-edge);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:var(--seal);
+  }
+  #qa-ctx.active{ display:block; }
+  #qa-answer{
+    flex:1;
+    overflow-y:auto;
+    padding:14px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    font-family:"Noto Serif Devanagari", serif;
+    font-size:14px;
+    line-height:1.6;
+  }
+  .chat-bubble{
+    padding:10px 12px;
+    border-radius:2px;
+    font-family:"Noto Serif Devanagari",serif;
+    font-size:14px;
+    line-height:1.6;
+    max-width:95%;
+  }
+  .chat-bubble.user{
+    background:var(--ink);
+    color:var(--paper);
+    align-self:flex-end;
+    font-family:"IBM Plex Sans",sans-serif;
+    font-size:13px;
+  }
+  .chat-bubble.bot{
+    background:var(--paper);
+    border:1px solid var(--paper-edge);
+    align-self:flex-start;
+  }
+  .chat-bubble.thinking{
+    color:var(--ink-faint);
+    font-style:italic;
+    font-family:"IBM Plex Sans",sans-serif;
+    font-size:13px;
+  }
+  .chat-src{
+    display:block;
+    margin-top:6px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10px;
+    color:var(--ink-faint);
+  }
+  .chat-input-row{
+    padding:10px 12px;
+    border-top:1px solid var(--paper-edge);
+    display:flex;
+    gap:8px;
+    background:var(--paper-2);
+  }
   #qa-input{
     flex:1;
     border:1px solid var(--line);
-    background:var(--paper-2);
+    background:var(--paper);
     border-radius:2px;
-    padding:11px 14px;
-    font-family:"Noto Serif Devanagari", serif;
-    font-size:14px;
+    padding:9px 11px;
+    font-family:"Noto Serif Devanagari",serif;
+    font-size:13px;
     color:var(--ink);
   }
   button.secondary{
-    font-family:"IBM Plex Sans", sans-serif;
+    font-family:"IBM Plex Sans",sans-serif;
     font-weight:600;
-    font-size:13.5px;
+    font-size:13px;
     color:var(--paper);
     background:var(--stamp);
     border:none;
     border-radius:2px;
-    padding:0 22px;
+    padding:0 16px;
     cursor:pointer;
   }
   button.secondary:hover{ background:var(--stamp-soft); }
-
-  #qa-answer{
-    display:none;
-    margin-top:18px;
-    padding:16px 18px;
-    background:var(--paper-2);
-    border-left:3px solid var(--seal);
-    font-family:"Noto Serif Devanagari", serif;
-    font-size:15px;
-    line-height:1.65;
-  }
-  #qa-answer .src{
-    display:block; margin-top:10px;
-    font-family:"IBM Plex Mono", monospace;
-    font-size:11px;
-    color:var(--ink-faint);
-  }
+  button.secondary:disabled{ background:var(--ink-faint); cursor:default; }
 
   footer{
     border-top:1px solid var(--line);
@@ -495,18 +547,65 @@
   }
 
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; scroll-behavior:auto !important; } }
+
+  /* visually hidden — screen readers only */
+  .sr-only{
+    position:absolute; width:1px; height:1px;
+    padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ---------- sidebar layout ---------- */
+  .page-shell{
+    display:grid;
+    grid-template-columns:1fr;
+    align-items:start;
+    max-width:960px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+  .page-shell.with-chat{
+    grid-template-columns:1fr 340px;
+    gap:28px;
+    max-width:1320px;
+  }
+
+  /* ---------- blind mode ---------- */
+  .blind-toggle-btn {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--paper-2);
+    border: 1px solid var(--paper-edge);
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .blind-toggle-btn.active {
+    background: var(--stamp);
+    color: var(--paper);
+    border-color: var(--stamp-soft);
+  }
 </style>
 </head>
 <body>
+<div id="aria-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-<header class="site">
-  <div class="wrap">
-    <div class="wordmark">mikha<span class="dot">.</span></div>
-    <div class="site-tag">plain-language legal review</div>
+<header class="site" role="banner">
+  <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+    <div style="display:flex; align-items:baseline; gap:16px;">
+      <div class="wordmark" aria-label="Mikha">mikha<span class="dot" aria-hidden="true">.</span></div>
+      <div class="site-tag">plain-language legal review</div>
+    </div>
+    <button id="blind-mode-btn" aria-pressed="false" class="blind-toggle-btn">Enable Blind Mode</button>
   </div>
 </header>
 
-<main class="wrap">
+<div class="page-shell" id="page-shell">
+<main class="wrap" role="main" aria-label="Document analysis">
 
   <section class="hero">
     <h1>You can read every word. That doesn't mean you understand <em>what you're signing.</em></h1>
@@ -531,59 +630,165 @@
         </div>
       </div>
       <div class="intake-actions">
-        <button class="primary" id="upload-btn">Analyze document</button>
-        <span id="status"></span>
+        <button class="primary" id="upload-btn" aria-label="Analyze the uploaded document">Analyze document</button>
+        <span id="status" role="status" aria-live="polite" aria-atomic="true"></span>
       </div>
-      <div id="progress-wrap"><div id="progress-bar"></div></div>
+      <div id="progress-wrap" role="progressbar" aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     </div>
   </section>
 
-  <section id="summary">
-    <span class="eyebrow">Risk summary</span>
-    <h2>Top 5 things you should know</h2>
-    <ol class="summary-list" id="summary-list"></ol>
+  <section id="summary" aria-labelledby="summary-heading">
+    <span class="eyebrow" aria-hidden="true">Risk summary</span>
+    <h2 id="summary-heading">Top 5 things you should know</h2>
+    <ol class="summary-list" id="summary-list" aria-label="Top 5 risky clauses"></ol>
   </section>
 
-  <div class="clauses-toolbar" id="clauses-toolbar" style="display:none">
-    <span class="eyebrow-row"><span class="eyebrow">Clause-by-clause</span></span>
-    <div class="filter-toggle">
-      <button id="filter-all" class="on">All</button>
-      <button id="filter-flagged">Flagged only</button>
+  <div class="clauses-toolbar" id="clauses-toolbar" style="display:none" role="toolbar" aria-label="Clause filters">
+    <span class="eyebrow-row"><span class="eyebrow" aria-hidden="true">Clause-by-clause</span></span>
+    <div class="filter-toggle" role="group" aria-label="Filter clauses">
+      <button id="filter-all" class="on" aria-pressed="true" aria-label="Show all clauses">All</button>
+      <button id="filter-flagged" aria-pressed="false" aria-label="Show flagged clauses only">Flagged only</button>
     </div>
   </div>
-  <section id="clauses"></section>
-
-  <section id="qa-box">
-    <span class="eyebrow">Free-form question</span>
-    <h2>Ask about this document</h2>
-    <div class="qa-row">
-      <input id="qa-input" type="text" placeholder="e.g. How much is the rent?">
-      <button class="secondary" id="qa-btn">Ask</button>
-    </div>
-    <div id="qa-answer"></div>
-  </section>
+  <section id="clauses" aria-label="Clause-by-clause analysis" aria-live="polite" aria-relevant="additions"></section>
 
 </main>
 
-<footer>
+  <aside id="qa-box" aria-labelledby="qa-heading" aria-live="polite">
+    <div class="chat-header">
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+        <div>
+          <span class="eyebrow" aria-hidden="true" style="display:block; font-size:9px; margin-bottom:2px;">Free-form question</span>
+          <h2 id="qa-heading" style="margin:0; font-family:'Fraunces',serif; font-size:16px; font-weight:560;">Ask Mikha</h2>
+        </div>
+        <button id="qa-close-btn" aria-label="Close chat sidebar" style="background:transparent; border:none; cursor:pointer; font-size:16px; color:var(--ink-soft);">&#x2715;</button>
+      </div>
+    </div>
+    <div id="qa-ctx" aria-label="Active clause context"></div>
+    <div id="qa-answer" aria-live="polite" role="log" aria-label="Conversation history"></div >
+    <div class="chat-input-row">
+      <label for="qa-input" class="sr-only">Type your question about the document</label>
+      <input id="qa-input" type="text" placeholder="Ask anything about this document…" aria-label="Type your question about the document" autocomplete="off">
+      <button class="secondary" id="qa-btn" aria-label="Submit question">Ask</button>
+    </div>
+  </aside>
+
+</div><!-- /page-shell -->
+
+<footer role="contentinfo">
   <div class="wrap">mikha — the original text is always shown untouched next to its explanation.</div>
 </footer>
 
-<audio id="player" class="audio-player" controls preload="none"></audio>
+<audio id="player" class="audio-player" controls preload="none" aria-label="Clause audio player"></audio>
 
 <script>
-const statusEl = document.getElementById('status');
-const clausesEl = document.getElementById('clauses');
-const toolbarEl = document.getElementById('clauses-toolbar');
-const summaryEl = document.getElementById('summary');
-const summaryList = document.getElementById('summary-list');
-const qaBox = document.getElementById('qa-box');
-const qaAnswer = document.getElementById('qa-answer');
-const player = document.getElementById('player');
-const uploadBtn = document.getElementById('upload-btn');
-const progressWrap = document.getElementById('progress-wrap');
-const progressBar = document.getElementById('progress-bar');
+const statusEl   = document.getElementById('status');
+const clausesEl  = document.getElementById('clauses');
+const toolbarEl  = document.getElementById('clauses-toolbar');
+const summaryEl  = document.getElementById('summary');
+const summaryList= document.getElementById('summary-list');
+const qaBox      = document.getElementById('qa-box');
+const qaAnswer   = document.getElementById('qa-answer');
+const qaInput    = document.getElementById('qa-input');
+const qaBtn      = document.getElementById('qa-btn');
+const qaCtx      = document.getElementById('qa-ctx');
+const qaCloseBtn = document.getElementById('qa-close-btn');
+const player     = document.getElementById('player');
+const uploadBtn  = document.getElementById('upload-btn');
+const progressWrap=document.getElementById('progress-wrap');
+const progressBar= document.getElementById('progress-bar');
+const pageShell  = document.getElementById('page-shell');
+const ariaAnnouncer = document.getElementById('aria-announcer');
 let activeAudioUrl = null;
+let chatClauseCtx = null; // currently selected clause for chat context
+
+// ── Blind Mode (Talkback + Double Click) ───────────────────────────────────
+let blindMode = false;
+let currentUtterance = null;
+window.lastHoveredElement = null;
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  if (!text) return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  const containsDevanagari = /[\u0900-\u097F]/.test(text);
+  if (containsDevanagari) {
+    utterance.lang = 'ne-NP';
+    const voices = window.speechSynthesis.getVoices();
+    const neVoice = voices.find(v => v.lang.startsWith('ne'));
+    if (neVoice) utterance.voice = neVoice;
+  } else {
+    utterance.lang = 'en-US';
+  }
+  currentUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
+
+function setupBlindModeListeners() {
+  document.addEventListener('mouseover', handleBlindHover);
+  document.addEventListener('mouseout', handleBlindOut);
+  document.addEventListener('dblclick', handleBlindDblClick);
+}
+
+function removeBlindModeListeners() {
+  document.removeEventListener('mouseover', handleBlindHover);
+  document.removeEventListener('mouseout', handleBlindOut);
+  document.removeEventListener('dblclick', handleBlindDblClick);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function handleBlindHover(e) {
+  if (!blindMode) return;
+  const target = e.target.closest('p, h1, h2, h3, button, input, textarea, li, .original, .devanagari, .eyebrow, .stamp-badge, .wordmark, .site-tag');
+  if (!target) return;
+  if (window.lastHoveredElement === target) return;
+  window.lastHoveredElement = target;
+  let textToRead = target.getAttribute('aria-label') || target.innerText || target.textContent;
+  if (textToRead) {
+    textToRead = textToRead.trim();
+    speak(textToRead);
+  }
+}
+
+function handleBlindOut(e) {
+  if (!blindMode) return;
+  const target = e.target.closest('p, h1, h2, h3, button, input, textarea, li, .original, .devanagari, .eyebrow, .stamp-badge, .wordmark, .site-tag');
+  if (target === window.lastHoveredElement) {
+    window.lastHoveredElement = null;
+  }
+}
+
+function handleBlindDblClick(e) {
+  if (!blindMode) return;
+  e.stopPropagation();
+  e.preventDefault();
+  const clickable = e.target.closest('button, input, textarea, a, .clause-head, .summary-list li');
+  if (clickable) {
+    speak("Activating " + (clickable.getAttribute('aria-label') || clickable.innerText || clickable.tagName));
+    clickable.click();
+  }
+}
+
+const blindBtn = document.getElementById('blind-mode-btn');
+blindBtn.onclick = () => {
+  blindMode = !blindMode;
+  blindBtn.classList.toggle('active', blindMode);
+  blindBtn.setAttribute('aria-pressed', String(blindMode));
+  blindBtn.textContent = blindMode ? 'Blind Mode: Active' : 'Enable Blind Mode';
+  if (blindMode) {
+    speak("Blind mode activated. Hover over any text to hear it. Double click to select or activate.");
+    setupBlindModeListeners();
+  } else {
+    speak("Blind mode deactivated.");
+    removeBlindModeListeners();
+  }
+};
+
+function announce(msg) {
+  ariaAnnouncer.textContent = '';
+  requestAnimationFrame(() => { ariaAnnouncer.textContent = msg; });
+}
 
 function setStatus(text, opts = {}) {
   statusEl.className = opts.err ? 'err' : '';
@@ -607,7 +812,8 @@ uploadBtn.onclick = async () => {
   clausesEl.innerHTML = '';
   toolbarEl.style.display = 'none';
   summaryEl.style.display = 'none';
-  qaBox.style.display = 'none';
+  qaBox.classList.remove('open');
+  pageShell.classList.remove('with-chat');
   progressWrap.style.display = 'block';
   progressBar.style.width = '0%';
 
@@ -648,7 +854,9 @@ uploadBtn.onclick = async () => {
         } else if (event === 'clause') {
           done++;
           fillClause(data.index, data.result);
-          progressBar.style.width = Math.round((done / total) * 100) + '%';
+          const pct = Math.round((done / total) * 100);
+          progressBar.style.width = pct + '%';
+          progressWrap.setAttribute('aria-valuenow', pct);
           setStatus(`${done} / ${total} clauses reviewed…`, { live: true });
         } else if (event === 'clause_error') {
           done++;
@@ -658,7 +866,8 @@ uploadBtn.onclick = async () => {
           renderSummary(data.summary);
         } else if (event === 'done') {
           setStatus(`${data.count} clauses reviewed in ${data.elapsed_seconds}s.`);
-          qaBox.style.display = 'block';
+          qaBox.classList.add('open');
+          pageShell.classList.add('with-chat');
           progressWrap.style.display = 'none';
         } else if (event === 'error') {
           setStatus('Error: ' + data.error, { err: true });
@@ -678,11 +887,16 @@ document.getElementById('filter-all').onclick = () => setFilter(false);
 document.getElementById('filter-flagged').onclick = () => setFilter(true);
 
 function setFilter(flaggedOnly) {
-  document.getElementById('filter-all').classList.toggle('on', !flaggedOnly);
-  document.getElementById('filter-flagged').classList.toggle('on', flaggedOnly);
+  const btnAll = document.getElementById('filter-all');
+  const btnFlag = document.getElementById('filter-flagged');
+  btnAll.classList.toggle('on', !flaggedOnly);
+  btnAll.setAttribute('aria-pressed', String(!flaggedOnly));
+  btnFlag.classList.toggle('on', flaggedOnly);
+  btnFlag.setAttribute('aria-pressed', String(flaggedOnly));
   document.querySelectorAll('.clause').forEach(el => {
     el.classList.toggle('hidden-by-filter', flaggedOnly && el.dataset.risk !== 'true');
   });
+  announce(flaggedOnly ? 'Showing flagged clauses only' : 'Showing all clauses');
 }
 
 function renderSkeletons(count) {
@@ -721,32 +935,37 @@ function fillClause(index, c) {
   const jargonHtml = c.jargon.map(j =>
     `<div class="jargon-row"><span class="term">${j.term}</span><span class="def">— ${j.definition}</span></div>`
   ).join('');
-
+  const riskLabel = c.risk_flag ? 'flagged as risky' : 'clear';
   card.innerHTML = `
-    <div class="clause-head" tabindex="0">
-      <span class="clause-id">Clause <b>${c.clause_id}</b></span>
-      <span class="stamp-badge ${c.risk_flag ? 'risk' : ''}">${c.risk_flag ? 'Flagged' : 'Clear'}</span>
-    </div>
-    <div class="clause-body">
-      <div class="original">${c.original_text}</div>
+    <button class="clause-head" id="head-${c.clause_id}"
+      aria-expanded="false"
+      aria-controls="body-${c.clause_id}"
+      aria-label="Clause ${c.clause_id}, ${riskLabel}. Press to focus and read details.">
+      <span class="clause-id" aria-hidden="true">Clause <b>${c.clause_id}</b></span>
+      <span class="stamp-badge ${c.risk_flag ? 'risk' : ''}" aria-hidden="true">${c.risk_flag ? 'Flagged' : 'Clear'}</span>
+    </button>
+    <div class="clause-body" id="body-${c.clause_id}">
+      <div class="original" lang="ne" aria-label="Original clause text">${c.original_text}</div>
       <div class="panel">
         <div class="block">
-          <span class="eyebrow">In plain terms</span>
-          <p class="devanagari">${c.explanation}</p>
+          <span class="eyebrow" aria-hidden="true">In plain terms</span>
+          <p class="devanagari" lang="ne" aria-label="Plain language explanation">${c.explanation}</p>
         </div>
-        ${jargonHtml ? `<div class="block"><span class="eyebrow">Terms explained</span>${jargonHtml}</div>` : ''}
-        ${c.risk_flag ? `<div class="block"><span class="eyebrow">Why this is risky</span><div class="risk-note">${c.risk_reason}</div></div>` : ''}
-        <div class="citation">
+        ${jargonHtml ? `<div class="block"><span class="eyebrow" aria-hidden="true">Terms explained</span>${jargonHtml}</div>` : ''}
+        ${c.risk_flag ? `<div class="block" role="alert"><span class="eyebrow" aria-hidden="true">Why this is risky</span><div class="risk-note" lang="ne">${c.risk_reason}</div></div>` : ''}
+        <div class="citation" aria-label="Law citation: ${c.law_citation.act}, section ${c.law_citation.section}">
           <span class="act">${c.law_citation.act}</span>
           <span>§ ${c.law_citation.section}</span>
         </div>
-        <div class="confidence">confidence — explanation: ${c.confidence.explanation} · citation: ${c.confidence.citation}</div>
-        <button class="listen-btn" data-id="${c.clause_id}"><span class="ico">&#9835;</span>Listen</button>
+        <div class="confidence" aria-label="Confidence: explanation ${c.confidence.explanation}, citation ${c.confidence.citation}">confidence — explanation: ${c.confidence.explanation} · citation: ${c.confidence.citation}</div>
+        <button class="listen-btn" data-id="${c.clause_id}" aria-label="Listen to explanation of clause ${c.clause_id}"><span class="ico" aria-hidden="true">&#9835;</span>Listen</button>
+        <button class="ask-clause-btn" data-id="${c.clause_id}" aria-label="Ask Mikha about clause ${c.clause_id}" style="margin-top:8px;margin-left:8px;display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:500;color:var(--seal);background:transparent;border:1px solid var(--seal-soft);border-radius:20px;padding:7px 14px;cursor:pointer;">&#x1F4AC; Ask about this</button>
       </div>
     </div>
   `;
   card.querySelector('.clause-head').onclick = () => focusClause(c.clause_id);
   card.querySelector('.listen-btn').onclick = (e) => { e.stopPropagation(); playVoice(c.clause_id, e.currentTarget); };
+  card.querySelector('.ask-clause-btn').onclick = (e) => { e.stopPropagation(); openQaWithClause(c); };
   if (slot) slot.replaceWith(card);
   else clausesEl.appendChild(card);
 }
@@ -758,11 +977,18 @@ function markClauseError(index, message) {
 }
 
 function focusClause(id) {
-  document.querySelectorAll('.clause').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.clause').forEach(el => {
+    el.classList.remove('active');
+    const hd = el.querySelector('.clause-head');
+    if (hd) hd.setAttribute('aria-expanded', 'false');
+  });
   const el = document.getElementById('clause-' + id);
   if (el) {
     el.classList.add('active');
+    const hd = el.querySelector('.clause-head');
+    if (hd) hd.setAttribute('aria-expanded', 'true');
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    announce('Clause ' + id + ' selected');
   }
 }
 
@@ -806,25 +1032,79 @@ async function playVoice(id, btn) {
   }
 }
 
-document.getElementById('qa-btn').onclick = async () => {
-  const q = document.getElementById('qa-input').value.trim();
+function openQaWithClause(clause) {
+  chatClauseCtx = clause;
+  qaCtx.textContent = `Context: Clause ${clause.clause_id} — ${clause.original_text.slice(0, 80)}…`;
+  qaCtx.classList.add('active');
+  pageShell.classList.add('with-chat');
+  qaBox.classList.add('open');
+  qaInput.focus();
+  announce('QA sidebar focused with clause ' + clause.clause_id + ' as context. Type your question.');
+}
+
+qaCloseBtn.onclick = () => {
+  qaBox.classList.remove('open');
+  pageShell.classList.remove('with-chat');
+  chatClauseCtx = null;
+  qaCtx.classList.remove('active');
+  announce('QA sidebar closed.');
+};
+
+async function sendQa() {
+  const q = qaInput.value.trim();
   if (!q) return;
-  qaAnswer.style.display = 'block';
-  qaAnswer.innerHTML = 'Looking through the document…';
+  qaInput.value = '';
+  qaBtn.disabled = true;
+
+  // Append user message bubble
+  const userBubble = document.createElement('div');
+  userBubble.className = 'chat-bubble user';
+  userBubble.textContent = q;
+  qaAnswer.appendChild(userBubble);
+
+  // Append thinking bubble
+  const thinking = document.createElement('div');
+  thinking.className = 'chat-bubble thinking';
+  thinking.textContent = 'Thinking…';
+  qaAnswer.appendChild(thinking);
+  qaAnswer.scrollTop = qaAnswer.scrollHeight;
+
+  // Prepend context if active
+  let queryText = q;
+  if (chatClauseCtx) {
+    queryText = `Regarding Clause ${chatClauseCtx.clause_id}: ${q}`;
+  }
+
   try {
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: q }),
+      body: JSON.stringify({ question: queryText }),
     });
-    const data = await res.json();
-    if (!res.ok) { qaAnswer.textContent = 'Error: ' + data.error; return; }
-    qaAnswer.innerHTML = `${data.answer}<span class="src">source — clause ${data.source_clauses.join(', ')}</span>`;
-    data.source_clauses.forEach(focusClause);
+    const data = await res.json().catch(() => ({ error: `Server error ${res.status}` }));
+    thinking.remove();
+    const botBubble = document.createElement('div');
+    botBubble.className = 'chat-bubble bot';
+    if (!res.ok) {
+      botBubble.textContent = 'Mikha is unavailable right now — ' + (data.error || `HTTP ${res.status}`) + '. Please try again in a moment.';
+    } else {
+      botBubble.innerHTML = data.answer +
+        `<span class="chat-src">source — clause ${data.source_clauses.join(', ')}</span>`;
+      data.source_clauses.forEach(focusClause);
+    }
+    qaAnswer.appendChild(botBubble);
+    qaAnswer.scrollTop = qaAnswer.scrollHeight;
+    announce('Mikha answered: ' + botBubble.textContent.slice(0, 120));
   } catch (e) {
-    qaAnswer.textContent = 'Something went wrong reaching the server.';
+    thinking.textContent = 'Network error — could not reach the server.';
+  } finally {
+    qaBtn.disabled = false;
+    qaInput.focus();
   }
-};
+}
+
+qaBtn.onclick = sendQa;
+qaInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendQa(); });
 </script>
 </body>
 </html>

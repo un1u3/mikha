@@ -65,6 +65,27 @@ _clause_vector_cache = {}
 
 
 def _find_relevant_clauses(question, processed_clauses, top_k=2):
+    import re
+    mentioned_ids = []
+    word_map = {
+        "one": "१", "first": "१", "पहिलो": "१", "१": "१", "1": "१",
+        "two": "२", "second": "२", "दोस्रो": "२", "२": "२", "2": "२",
+        "three": "३", "third": "३", "तेस्रो": "३", "३": "३", "3": "३",
+        "four": "४", "fourth": "४", "चौथो": "४", "४": "४", "4": "४",
+        "five": "५", "fifth": "५", "पाँचौ": "५", "५": "५", "5": "५",
+    }
+    for word, dev_digit in word_map.items():
+        if word in question.lower():
+            if dev_digit not in mentioned_ids:
+                mentioned_ids.append(dev_digit)
+    digits = re.findall(r'[0-9०-९]+', question)
+    for d in digits:
+        dev_d = "".join("०१२३४५६७८९"["0123456789".index(c)] if c in "0123456789" else c for c in d)
+        if dev_d not in mentioned_ids:
+            mentioned_ids.append(dev_d)
+
+    matched_clauses = [c for c in processed_clauses if c["clause_id"] in mentioned_ids]
+
     cache_key = id(processed_clauses)
     if cache_key not in _clause_vector_cache:
         texts = [c["original_text"] + " " + c["explanation"] for c in processed_clauses]
@@ -76,8 +97,16 @@ def _find_relevant_clauses(question, processed_clauses, top_k=2):
     q = q / np.linalg.norm(q)
     norms = vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
     sims = norms @ q
-    top_idx = np.argsort(-sims)[:top_k]
-    return [processed_clauses[i] for i in top_idx]
+    top_idx = np.argsort(-sims)
+
+    result = list(matched_clauses)
+    for idx in top_idx:
+        if len(result) >= top_k:
+            break
+        c = processed_clauses[idx]
+        if c not in result:
+            result.append(c)
+    return result[:top_k]
 
 
 def answer_question(question, processed_clauses):
